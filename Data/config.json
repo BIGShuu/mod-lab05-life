@@ -1,0 +1,12 @@
+{
+  "Width": 40,
+  "Height": 25,
+  "CellSize": 1,
+  "MaxGenerations": 100,
+  "StabilizationWindow": 10,
+  "PatternFile": "Data/glider.pattern",
+  "StateFile": "",
+  "RandomDensity": 0.3,
+  "SaveFinalState": true,
+  "RunResearch": true
+}
