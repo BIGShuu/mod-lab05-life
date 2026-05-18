@@ -287,7 +287,7 @@ namespace Life
         public bool RunResearch { get; set; } = true;
     }
 
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -359,7 +359,7 @@ namespace Life
             Console.WriteLine("\n=== Simulation Complete ===");
         }
 
-        static Config LoadConfig(string path)
+        public static Config LoadConfig(string path)
         {
             if (File.Exists(path))
             {

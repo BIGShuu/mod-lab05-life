@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Life;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Life.Tests
 {
