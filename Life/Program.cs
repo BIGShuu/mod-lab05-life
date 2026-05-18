@@ -13,8 +13,6 @@ namespace Life
         public bool IsAlive { get; set; }
         public readonly List<Cell> Neighbors = new List<Cell>();
         private bool IsAliveNext;
-
-        // Правила жизни клетки
         public void DetermineNextLiveState()
         {
             int liveNeighbors = Neighbors.Count(x => x.IsAlive);
@@ -46,11 +44,10 @@ namespace Life
                 for (int y = 0; y < Rows; y++)
                     Cells[x, y] = new Cell();
 
-            ConnectNeighbors(); 
+            ConnectNeighbors(); // lec03.pdf, слайд 13
             Randomize(liveDensity);
         }
 
-        // Делаем поле замкнутым, чтобы края не были границами
         private void ConnectNeighbors()
         {
             for (int x = 0; x < Columns; x++)
@@ -81,7 +78,6 @@ namespace Life
                 cell.IsAlive = rand.NextDouble() < liveDensity;
         }
 
-        // Сначала считаем, потом обновляем — чтобы не ломать логику
         public void Advance()
         {
             foreach (var cell in Cells)
@@ -90,53 +86,10 @@ namespace Life
                 cell.Advance();
         }
 
-        public int CountAliveCells()
-        {
-            return Cells.Cast<Cell>().Count(c => c.IsAlive);
-        }
+        public int CountAliveCells() =>
+            Cells.Cast<Cell>().Count(c => c.IsAlive);
 
-        // Поиск групп живых клеток
-        public List<List<Cell>> FindClusters()
-        {
-            var visited = new bool[Columns, Rows];
-            var clusters = new List<List<Cell>>();
-
-            for (int x = 0; x < Columns; x++)
-            {
-                for (int y = 0; y < Rows; y++)
-                {
-                    var cell = Cells[x, y];
-                    if (cell.IsAlive && !visited[x, y])
-                    {
-                        var cluster = new List<Cell>();
-                        FloodFill(x, y, visited, cluster);
-                        if (cluster.Count > 0)
-                            clusters.Add(cluster);
-                    }
-                }
-            }
-            return clusters;
-        }
-
-        private void FloodFill(int x, int y, bool[,] visited, List<Cell> cluster)
-        {
-            if (x < 0 || x >= Columns || y < 0 || y >= Rows) return;
-            if (visited[x, y]) return;
-            var cell = Cells[x, y];
-            if (!cell.IsAlive) return;
-
-            visited[x, y] = true;
-            cluster.Add(cell);
-
-            foreach (var neighbor in cell.Neighbors)
-            {
-                int nx = Array.IndexOf(Cells, neighbor) / Rows; 
-                int ny = Array.IndexOf(Cells, neighbor) % Rows;
-                FloodFill(nx, ny, visited, cluster);
-            }
-        }
-
-        // То же самое, но через очередь — надежнее
+        // Поиск кластеров (связных групп живых клеток) - BFS
         public List<List<Cell>> FindClustersSimple()
         {
             var visited = new bool[Columns, Rows];
@@ -188,11 +141,9 @@ namespace Life
             }
         }
 
-        // Загрузка паттерна из файла
         public void LoadPattern(string filename, int offsetX = 0, int offsetY = 0)
         {
             if (!File.Exists(filename)) return;
-            
             var lines = File.ReadAllLines(filename);
             for (int y = 0; y < lines.Length; y++)
             {
@@ -201,8 +152,7 @@ namespace Life
                     char c = lines[y][x];
                     if (c == 'O' || c == '1' || c == '*')
                     {
-                        int px = x + offsetX;
-                        int py = y + offsetY;
+                        int px = x + offsetX, py = y + offsetY;
                         if (px < Columns && py < Rows)
                             Cells[px, py].IsAlive = true;
                     }
@@ -226,7 +176,6 @@ namespace Life
         public void LoadState(string filename)
         {
             if (!File.Exists(filename)) return;
-            
             var lines = File.ReadAllLines(filename);
             for (int y = 0; y < Math.Min(lines.Length, Rows); y++)
             {
@@ -237,7 +186,6 @@ namespace Life
             }
         }
 
-        // Вывод поля в консоль для отладки
         public override string ToString()
         {
             var result = "";
@@ -253,11 +201,9 @@ namespace Life
 
     public static class Research
     {
-        // Смотрим, когда система стабилизируется
         public static int MeasureStabilization(Board board, int maxGenerations = 200, int window = 10)
         {
             var history = new List<int>();
-            
             for (int gen = 0; gen < maxGenerations; gen++)
             {
                 int aliveCount = board.CountAliveCells();
@@ -269,13 +215,11 @@ namespace Life
                     if (recent.Distinct().Count() == 1)
                         return gen - window + 1;
                 }
-
                 board.Advance();
             }
-            return -1; 
+            return -1;
         }
 
-        // Классификация кластеров по размеру
         public static string ClassifyCluster(List<Cell> cluster)
         {
             int size = cluster.Count;
@@ -288,13 +232,11 @@ namespace Life
             return "Unknown";
         }
 
-        // Строим график зависимости стабилизации от плотности
         public static void GenerateDensityPlot(string dataFile, string plotFile, int width = 40, int height = 25)
         {
             var results = new List<(double density, int stabilizationGen)>();
-            
             Console.WriteLine("Generating density plot data...");
-            
+
             for (double density = 0.1; density <= 0.9; density += 0.1)
             {
                 var board = new Board(width, height, 1, density);
@@ -307,14 +249,12 @@ namespace Life
             foreach (var r in results)
                 lines.Add($"{r.density:F1},{r.stabilizationGen}");
             File.WriteAllLines(dataFile, lines);
-
             PlotGraph(results, plotFile);
         }
 
         private static void PlotGraph(List<(double density, int stabilizationGen)> data, string outputFile)
         {
             var plt = new ScottPlot.Plot();
-            
             double[] xs = data.Select(d => d.density).ToArray();
             double[] ys = data.Select(d => (double)d.stabilizationGen).ToArray();
 
@@ -326,7 +266,7 @@ namespace Life
             plt.XLabel("Initial Density");
             plt.YLabel("Stabilization Generation");
             plt.Title("Game of Life: Stabilization Time vs Density");
-            plt.Grid.Visible = true;
+            // Сетка в ScottPlot 5.x включена по умолчанию, не нужно вызывать методы
 
             plt.SavePng(outputFile, 800, 600);
             Console.WriteLine($"Plot saved to {outputFile}");
@@ -346,7 +286,7 @@ namespace Life
         public bool SaveFinalState { get; set; } = true;
         public bool RunResearch { get; set; } = true;
     }
-    
+
     class Program
     {
         static void Main(string[] args)
@@ -355,7 +295,7 @@ namespace Life
             var config = LoadConfig("Data/config.json");
             var board = new Board(config.Width, config.Height, config.CellSize);
 
-            // Сначала пробуем загрузить состояние, потом паттерн, иначе рандом
+            // Загрузка начального состояния (приоритет: State > Pattern > Random)
             if (!string.IsNullOrEmpty(config.StateFile) && File.Exists(config.StateFile))
             {
                 Console.WriteLine($"Loading state from {config.StateFile}...");
@@ -375,13 +315,10 @@ namespace Life
             Console.WriteLine("\nInitial state:");
             Console.WriteLine(board);
             Console.WriteLine($"Alive cells: {board.CountAliveCells()}");
-
             Console.WriteLine($"\nRunning simulation for {config.MaxGenerations} generations...\n");
-            
             for (int gen = 0; gen < config.MaxGenerations; gen++)
             {
                 board.Advance();
-                
                 if (gen % 10 == 0 || gen == config.MaxGenerations - 1)
                 {
                     Console.WriteLine($"Generation {gen + 1}: {board.CountAliveCells()} alive");
@@ -395,13 +332,13 @@ namespace Life
                 Console.WriteLine($"\nFinal state saved to {finalStateFile}");
             }
 
+            // Исследования (Task 2)
             if (config.RunResearch)
             {
                 Console.WriteLine("\n=== Research Results ===");
-                
                 var clusters = board.FindClustersSimple();
                 Console.WriteLine($"\nClusters found: {clusters.Count}");
-                
+
                 var classification = new Dictionary<string, int>();
                 foreach (var cluster in clusters)
                 {
