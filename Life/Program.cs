@@ -326,7 +326,7 @@ namespace Life
             plt.XLabel("Initial Density");
             plt.YLabel("Stabilization Generation");
             plt.Title("Game of Life: Stabilization Time vs Density");
-            plt.Grid(true);
+            plt.Grid.Visible = true;
 
             plt.SavePng(outputFile, 800, 600);
             Console.WriteLine($"Plot saved to {outputFile}");
