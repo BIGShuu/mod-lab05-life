@@ -1,4 +1,3 @@
-# Build results
 [Bb]in/
 [Oo]bj/
 [Dd]ebug/
@@ -6,15 +5,5 @@
 *.dll
 *.pdb
 *.exe
-*.user
-*.suo
-*.nupkg
-
-# IDE
 .vs/
 .vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
